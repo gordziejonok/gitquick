@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.1](https://github.com/gordziejonok/gitquick/compare/v0.3.0...v0.3.1) (2026-08-07)
+
+
+### Features
+
+* accept optional message for stash ([#84](https://github.com/gordziejonok/gitquick/issues/84)) ([ef6214b](https://github.com/gordziejonok/gitquick/commit/ef6214b1445fb41c960e1388db4a735fa2acdb0c))
+* add stash push command ([#82](https://github.com/gordziejonok/gitquick/issues/82)) ([c58320d](https://github.com/gordziejonok/gitquick/commit/c58320d2c1b209d97b5ef21eb912ea4cab266fa5))
+
 ## [0.3.0](https://github.com/Gerixmus/gitquick/compare/v0.2.0...v0.3.0) (2026-08-02)
 
 
