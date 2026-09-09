@@ -8,6 +8,17 @@ pub struct Change {
     status: git2::Status,
 }
 
+enum StatusNew {
+    Unmodified,
+    Modified,
+    FileTypeChanged,
+    Added,
+    Deleted,
+    Renamed,
+    Copied,
+    Updated
+}
+
 pub struct CommitLog {
     pub hash: String,
     pub message: String,
@@ -191,7 +202,32 @@ pub fn get_repository() -> Result<Repository, git2::Error> {
     Repository::discover(".")
 }
 
-pub fn get_changes(repo: &Repository) -> (Vec<Change>, Vec<Change>) {
+pub fn get_changes() -> Result<(), Box<dyn Error>> {
+    let output = Command::new("git")
+        .arg("status")
+        .arg("--porcelain")
+        .output()?;
+
+    if !output.status.success() {
+        let err = String::from_utf8_lossy(&output.stderr);
+        return Err(Box::new(std::io::Error::other(err.to_string())))
+    }
+
+    let commits = String::from_utf8_lossy(&output.stdout)
+        .lines()
+        .for_each(|l| {
+            let change: Vec<&str> = l.trim().split(" ").collect();
+            println!("{}: {}", change[0], change[1]);
+            let x = Change {
+               path: change[1].to_owned(),
+               status: Status::WT_UNREADABLE
+            };
+        });
+
+    Ok(())
+}
+
+pub fn get_changes_legacy(repo: &Repository) -> (Vec<Change>, Vec<Change>) {
     let mut status_opts = StatusOptions::new();
     status_opts.include_untracked(true);
     status_opts.recurse_untracked_dirs(true);

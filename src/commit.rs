@@ -1,7 +1,7 @@
 use crate::{
     config::Commit,
     git_operations::{
-        commit, commit_fixup, get_changes, get_current_branch, get_log, get_repository,
+        commit, commit_fixup, get_changes_legacy, get_current_branch, get_log, get_repository,
     },
 };
 use crossterm::terminal;
@@ -12,7 +12,7 @@ use std::error::Error;
 pub fn run_commit(commit_config: Commit, fixup: bool, amend: bool) -> Result<(), Box<dyn Error>> {
     let repo = get_repository()?;
 
-    let (_changes, staged) = get_changes(&repo);
+    let (_changes, staged) = get_changes_legacy(&repo);
 
     if staged.is_empty() {
         println!("No staged files found.");

@@ -6,7 +6,9 @@ use inquire::MultiSelect;
 pub fn stage_files() -> Result<(), Box<dyn Error>> {
     let repo = git_operations::get_repository()?;
 
-    let (changes, _staged) = git_operations::get_changes(&repo);
+
+    git_operations::get_changes();
+    let (changes, _staged) = git_operations::get_changes_legacy(&repo);
 
     if changes.is_empty() {
         println!("No untracked or modified files found.");
