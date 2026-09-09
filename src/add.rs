@@ -1,8 +1,10 @@
+use std::error::Error;
+
 use crate::git_operations::{self, Change};
 use inquire::MultiSelect;
 
-pub fn stage_files() -> Result<(), String> {
-    let repo = git_operations::get_repository().map_err(|e| e.to_string())?;
+pub fn stage_files() -> Result<(), Box<dyn Error>> {
+    let repo = git_operations::get_repository()?;
 
     let (changes, _staged) = git_operations::get_changes(&repo);
 
@@ -13,9 +15,7 @@ pub fn stage_files() -> Result<(), String> {
 
     let mut selected_files = Vec::<Change>::new();
 
-    let selected_unstaged = MultiSelect::new("Select changes to add:", changes)
-        .prompt()
-        .map_err(|e| format!("An error occurred during selection: {}", e))?;
+    let selected_unstaged = MultiSelect::new("Select changes to add:", changes).prompt()?;
 
     if selected_unstaged.is_empty() && selected_files.is_empty() {
         println!("No files selected.");
@@ -24,7 +24,7 @@ pub fn stage_files() -> Result<(), String> {
 
     selected_files.extend(selected_unstaged);
 
-    git_operations::add_files(selected_files).map_err(|e| format!("Failed to add files: {}", e))?;
+    git_operations::add_files(selected_files)?;
 
     println!("✅ Added files successfuly!");
     Ok(())

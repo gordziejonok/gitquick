@@ -1,4 +1,5 @@
 use std::{
+    error::Error,
     fs,
     io::{self, Write},
     path::PathBuf,
@@ -56,7 +57,7 @@ pub fn load_config() -> Config {
     }
 }
 
-pub fn run_config(args: &ConfigArgs) -> Result<(), String> {
+pub fn run_config(args: &ConfigArgs) -> Result<(), Box<dyn Error>> {
     let mut config = load_config();
     let config_path = get_config_path();
     let setting: Vec<&str> = args.key.split('.').collect();
@@ -69,17 +70,17 @@ pub fn run_config(args: &ConfigArgs) -> Result<(), String> {
         "commit" => match field {
             "conventional" => set_bool(&mut config.commit.conventional, &args.value)?,
             "ticket" => set_bool(&mut config.commit.ticket, &args.value)?,
-            "types" => set_vec(&mut config.commit.types, &args.value)?,
-            _ => return Err(format!("Unknown commit setting '{}'", field)),
+            "types" => set_vec(&mut config.commit.types, &args.value),
+            _ => return Err(format!("Unknown commit setting '{}'", field).into()),
         },
-        _ => return Err(format!("Unknown section '{}'", section)),
+        _ => return Err(format!("Unknown section '{}'", section).into()),
     }
     save_config(&config, &config_path).map_err(|e| format!("Failed to save config: {}", e))?;
     println!("✅ Config created successfuly!");
     Ok(())
 }
 
-fn set_bool(target: &mut bool, value: &str) -> Result<(), String> {
+fn set_bool(target: &mut bool, value: &str) -> Result<(), Box<dyn Error>> {
     match value.to_lowercase().as_str() {
         "1" | "true" => *target = true,
         "0" | "false" => *target = false,
@@ -88,9 +89,8 @@ fn set_bool(target: &mut bool, value: &str) -> Result<(), String> {
     Ok(())
 }
 
-fn set_vec(target: &mut Vec<String>, value: &str) -> Result<(), String> {
+fn set_vec(target: &mut Vec<String>, value: &str) {
     *target = value.split(',').map(|s| s.trim().to_string()).collect();
-    Ok(())
 }
 
 fn get_config_path() -> PathBuf {
