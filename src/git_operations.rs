@@ -1,6 +1,6 @@
 use core::fmt;
 use git2::{Repository, Status, StatusOptions};
-use std::{error::Error, process::Command};
+use std::{error::Error, process::Command, process::Stdio};
 
 #[derive(Clone)]
 pub struct Change {
@@ -166,6 +166,25 @@ fn fetch_with_prune() -> Result<(), std::io::Error> {
     } else {
         Err(std::io::Error::other("git fetch with prune failed"))
     }
+}
+
+pub fn rebase(hash: &str, interactive: bool) -> Result<(), Box<dyn Error>> {
+    let mut rebase_command = Command::new("git");
+    rebase_command
+        .stdin(Stdio::inherit())
+        .stdout(Stdio::inherit())
+        .stderr(Stdio::inherit())
+        .arg("rebase")
+        .arg("--autosquash")
+        .arg(hash);
+
+    if interactive {
+        rebase_command.arg("--interactive");
+    }
+
+    rebase_command.status()?;
+
+    Ok(())
 }
 
 pub fn get_repository() -> Result<Repository, git2::Error> {
