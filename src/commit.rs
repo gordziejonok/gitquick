@@ -9,8 +9,8 @@ use inquire::{Confirm, Select, Text};
 use regex::Regex;
 use std::error::Error;
 
-pub fn run_commit(commit_config: Commit, fixup: bool, amend: bool) -> Result<(), String> {
-    let repo = get_repository().map_err(|e| e.to_string())?;
+pub fn run_commit(commit_config: Commit, fixup: bool, amend: bool) -> Result<(), Box<dyn Error>> {
+    let repo = get_repository()?;
 
     let (_changes, staged) = get_changes(&repo);
 
@@ -27,15 +27,14 @@ pub fn run_commit(commit_config: Commit, fixup: bool, amend: bool) -> Result<(),
     if amend {
         let log = get_log()?;
         if let Some(log) = log.first() {
-            print_in_box(&log.message).map_err(|e| format!("Formatting failed: {}", e))?;
+            print_in_box(&log.message)?;
 
             let should_commit = Confirm::new("Commit with previous message?")
                 .with_default(true)
-                .prompt()
-                .map_err(|e| format!("Failed to get confirmation: {}", e))?;
+                .prompt()?;
 
             if should_commit {
-                commit(&log.message, amend).map_err(|e| format!("❌ Commit failed: {}", e))?;
+                commit(&log.message, amend)?;
                 println!("✅ Commit successful!");
                 return Ok(());
             }
@@ -43,10 +42,7 @@ pub fn run_commit(commit_config: Commit, fixup: bool, amend: bool) -> Result<(),
     }
 
     let mut commit_header = if commit_config.conventional {
-        let type_and_scope = get_type_and_scope(commit_config.types)
-            .map_err(|e| format!("An error occurred: {}", e))
-            .map_err(|e| format!("Failed to get confirmation: {}", e))?;
-        type_and_scope
+        get_type_and_scope(commit_config.types)?
     } else {
         String::new()
     };
@@ -61,14 +57,10 @@ pub fn run_commit(commit_config: Commit, fixup: bool, amend: bool) -> Result<(),
         "".to_string()
     };
 
-    let user_input = Text::new("Enter commit message:")
-        .prompt()
-        .map_err(|e| format!("An error occurred: {}", e))?;
+    let user_input = Text::new("Enter commit message:").prompt()?;
 
     let body = if commit_config.conventional {
-        let mut body_text = Text::new("Body:")
-            .prompt()
-            .map_err(|e| format!("An error occurred: {}", e))?;
+        let mut body_text = Text::new("Body:").prompt()?;
         if !body_text.is_empty() {
             body_text = format!("\n\n{}", body_text);
         };
@@ -80,13 +72,10 @@ pub fn run_commit(commit_config: Commit, fixup: bool, amend: bool) -> Result<(),
     let footer = if commit_config.conventional {
         let is_breaking_change = Confirm::new("BREAKING CHANGE?")
             .with_default(false)
-            .prompt()
-            .map_err(|e| format!("Failed to get confirmation: {}", e))?;
+            .prompt()?;
 
         let breaking_change = if is_breaking_change {
-            let breaking_change_desc = Text::new("Breaking change description:")
-                .prompt()
-                .map_err(|e| format!("An error occurred: {}", e))?;
+            let breaking_change_desc = Text::new("Breaking change description:").prompt()?;
             commit_header.push('!');
             format!("\n\nBREAKING CHANGE: {}", breaking_change_desc)
         } else {
@@ -103,15 +92,12 @@ pub fn run_commit(commit_config: Commit, fixup: bool, amend: bool) -> Result<(),
         commit_header, user_input, ticket, body, footer
     );
 
-    print_in_box(&message).map_err(|e| format!("Formatting failed: {}", e))?;
+    print_in_box(&message)?;
 
-    let should_commit = Confirm::new("Commit?")
-        .with_default(true)
-        .prompt()
-        .map_err(|e| format!("Failed to get confirmation: {}", e))?;
+    let should_commit = Confirm::new("Commit?").with_default(true).prompt()?;
 
     if should_commit {
-        commit(&message, amend).map_err(|e| format!("❌ Commit failed: {}", e))?;
+        commit(&message, amend)?;
         println!("✅ Commit successful!");
     } else {
         println!("❌ Commit canceled or failed to get user confirmation.");
@@ -120,13 +106,11 @@ pub fn run_commit(commit_config: Commit, fixup: bool, amend: bool) -> Result<(),
     Ok(())
 }
 
-fn run_fixup() -> Result<(), String> {
+fn run_fixup() -> Result<(), Box<dyn Error>> {
     let commits = get_log()?;
 
-    let selected_commit = Select::new("Select commit to fixup:", commits)
-        .prompt()
-        .map_err(|e| format!("Failed to fixup commit: {}", e))?;
-    commit_fixup(&selected_commit.hash).map_err(|e| format!("❌ Commit failed: {}", e))?;
+    let selected_commit = Select::new("Select commit to fixup:", commits).prompt()?;
+    commit_fixup(&selected_commit.hash)?;
     println!("✅ Fixup successful!");
     Ok(())
 }
@@ -174,14 +158,10 @@ pub fn print_in_box(message: &str) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn get_type_and_scope(commit_types: Vec<String>) -> Result<String, String> {
-    let selected_type = Select::new("Select commit type", commit_types)
-        .prompt()
-        .map_err(|e| format!("An error occurred: {}", e))?;
+fn get_type_and_scope(commit_types: Vec<String>) -> Result<String, Box<dyn Error>> {
+    let selected_type = Select::new("Select commit type", commit_types).prompt()?;
 
-    let mut scope = Text::new("Scope:")
-        .prompt()
-        .map_err(|e| format!("An error occurred: {}", e))?;
+    let mut scope = Text::new("Scope:").prompt()?;
 
     if !scope.is_empty() {
         scope = format!("({})", scope);
