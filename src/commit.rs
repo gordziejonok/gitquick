@@ -1,8 +1,6 @@
 use crate::{
     config::Commit,
-    git_operations::{
-        commit, commit_fixup, get_changes, get_current_branch, get_log, get_repository,
-    },
+    git_operations::{commit, commit_fixup, get_current_branch, get_log, get_staged_changes},
 };
 use crossterm::terminal;
 use inquire::{Confirm, Select, Text};
@@ -10,9 +8,7 @@ use regex::Regex;
 use std::error::Error;
 
 pub fn run_commit(commit_config: Commit, fixup: bool, amend: bool) -> Result<(), Box<dyn Error>> {
-    let repo = get_repository()?;
-
-    let (_changes, staged) = get_changes(&repo);
+    let staged = get_staged_changes()?;
 
     if staged.is_empty() {
         println!("No staged files found.");

@@ -1,11 +1,71 @@
 use core::fmt;
-use git2::{Repository, Status, StatusOptions};
-use std::{error::Error, process::Command, process::Stdio};
+use git2::Repository;
+use std::{
+    error::Error,
+    fmt::Display,
+    process::{Command, Stdio},
+};
 
 #[derive(Clone)]
 pub struct Change {
     pub path: String,
-    status: git2::Status,
+    status: Status,
+}
+
+#[derive(Clone)]
+enum Status {
+    WtNew,
+    WtModified,
+    WtDeleted,
+    IndexNew,
+    IndexModified,
+    IndexDeleted,
+}
+
+#[derive(Debug)]
+enum StatusParseError {
+    UnknownStatus(String),
+}
+
+impl Display for StatusParseError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::UnknownStatus(status) => write!(f, "Unknown status: {status}"),
+        }
+    }
+}
+
+impl std::error::Error for StatusParseError {}
+
+impl TryFrom<&str> for Status {
+    type Error = StatusParseError;
+
+    fn try_from(value: &str) -> Result<Status, Self::Error> {
+        match value {
+            "??" => Ok(Status::WtNew),
+            " M" => Ok(Status::WtModified),
+            " D" => Ok(Status::WtDeleted),
+            "A " => Ok(Status::IndexNew),
+            "M " => Ok(Status::IndexModified),
+            "D " => Ok(Status::IndexDeleted),
+            _ => Err(StatusParseError::UnknownStatus(value.to_owned())),
+        }
+    }
+}
+
+impl Change {
+    pub fn is_worktree(&self) -> bool {
+        matches!(
+            self.status,
+            Status::WtNew | Status::WtModified | Status::WtDeleted
+        )
+    }
+    pub fn is_staged(&self) -> bool {
+        matches!(
+            self.status,
+            Status::IndexNew | Status::IndexModified | Status::IndexDeleted
+        )
+    }
 }
 
 pub struct CommitLog {
@@ -22,9 +82,9 @@ impl fmt::Display for CommitLog {
 impl fmt::Display for Change {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let status_str = match self.status {
-            s if s.contains(Status::WT_NEW) => "new",
-            s if s.contains(Status::WT_MODIFIED) => "modified",
-            s if s.contains(Status::WT_DELETED) => "deleted",
+            Status::WtNew => "new",
+            Status::WtModified => "modified",
+            Status::WtDeleted => "deleted",
             _ => "?",
         };
         write!(f, "{}: {}", status_str, self.path)
@@ -191,40 +251,48 @@ pub fn get_repository() -> Result<Repository, git2::Error> {
     Repository::discover(".")
 }
 
-pub fn get_changes(repo: &Repository) -> (Vec<Change>, Vec<Change>) {
-    let mut status_opts = StatusOptions::new();
-    status_opts.include_untracked(true);
-    status_opts.recurse_untracked_dirs(true);
+fn get_changes() -> Result<Vec<Change>, Box<dyn Error>> {
+    let output = Command::new("git")
+        .arg("status")
+        .arg("--porcelain")
+        .output()?;
 
-    let statuses = match repo.statuses(Some(&mut status_opts)) {
-        Ok(statuses) => statuses,
-        Err(err) => {
-            println!("Error fetching statuses: {}", err);
-            return (Vec::new(), Vec::new());
-        }
-    };
-
-    let mut untracked = Vec::new();
-    let mut staged = Vec::new();
-
-    for entry in statuses.iter() {
-        if let Some(path) = entry.path() {
-            let path = path.to_string();
-            let status = entry.status();
-            if status.intersects(Status::WT_NEW | Status::WT_MODIFIED | Status::WT_DELETED) {
-                untracked.push(Change {
-                    path: path.clone(),
-                    status,
-                });
-            }
-            if status.intersects(Status::INDEX_NEW | Status::INDEX_MODIFIED | Status::INDEX_DELETED)
-            {
-                staged.push(Change { path, status });
-            }
-        }
+    if !output.status.success() {
+        let err = String::from_utf8_lossy(&output.stderr);
+        return Err(Box::new(std::io::Error::other(err.to_string())));
     }
 
-    (untracked, staged)
+    let commits: Vec<Change> = String::from_utf8_lossy(&output.stdout)
+        .lines()
+        .map(|line| -> Result<Change, StatusParseError> {
+            Ok(Change {
+                path: line[3..].trim().to_owned(),
+                status: line[..2].try_into()?,
+            })
+        })
+        .collect::<Result<Vec<Change>, StatusParseError>>()?;
+
+    Ok(commits)
+}
+
+pub fn get_unstaged_changes() -> Result<Vec<Change>, Box<dyn Error>> {
+    let changes = get_changes()?;
+    let unstaged: Vec<Change> = changes
+        .iter()
+        .filter(|change| change.is_worktree())
+        .cloned()
+        .collect();
+    Ok(unstaged)
+}
+
+pub fn get_staged_changes() -> Result<Vec<Change>, Box<dyn Error>> {
+    let changes = get_changes()?;
+    let staged: Vec<Change> = changes
+        .iter()
+        .filter(|change| change.is_staged())
+        .cloned()
+        .collect();
+    Ok(staged)
 }
 
 pub fn add_files(selected_files: Vec<Change>) -> Result<(), Box<dyn Error>> {

@@ -6,9 +6,7 @@ use crate::git_operations::{self, Change};
 
 pub fn run_stash(push: bool) -> Result<(), Box<dyn Error>> {
     if push {
-        let repo = git_operations::get_repository()?;
-
-        let (changes, _staged) = git_operations::get_changes(&repo);
+        let changes = git_operations::get_unstaged_changes()?;
 
         if changes.is_empty() {
             println!("No untracked or modified files found.");
