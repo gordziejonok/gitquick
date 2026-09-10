@@ -4,11 +4,7 @@ use crate::git_operations::{self, Change};
 use inquire::MultiSelect;
 
 pub fn stage_files() -> Result<(), Box<dyn Error>> {
-    let repo = git_operations::get_repository()?;
-
-
-    git_operations::get_changes();
-    let (changes, _staged) = git_operations::get_changes_legacy(&repo);
+    let changes = git_operations::get_unstaged_changes()?;
 
     if changes.is_empty() {
         println!("No untracked or modified files found.");
