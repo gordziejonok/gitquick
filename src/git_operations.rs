@@ -393,23 +393,17 @@ pub fn get_current_branch() -> Result<String, git2::Error> {
         .ok_or_else(|| git2::Error::from_str("Failed to get branch name"))
 }
 
-pub fn create_and_checkout_branch(branch_name: &str) -> Result<(), git2::Error> {
-    let repo = get_repository()?;
+pub fn create_and_checkout_branch(branch_name: &str) -> Result<(), Box<dyn Error>> {
+    let output = Command::new("git")
+        .arg("checkout")
+        .arg("-b")
+        .arg(branch_name)
+        .output()?;
 
-    let head_ref = repo.head()?;
-    let target_commit = head_ref.peel_to_commit()?;
-
-    let branch = repo.branch(branch_name, &target_commit, false)?;
-
-    let branch_ref = branch
-        .get()
-        .name()
-        .ok_or_else(|| git2::Error::from_str("Invalid branch reference name"))?;
-
-    let obj = repo.revparse_single(branch_ref)?;
-
-    repo.checkout_tree(&obj, None)?;
-    repo.set_head(branch_ref)?;
-
-    Ok(())
+    if !output.status.success() {
+        let err = String::from_utf8_lossy(&output.stderr);
+        Err(Box::new(std::io::Error::other(err.to_string())))
+    } else {
+        Ok(())
+    }
 }
