@@ -1,5 +1,4 @@
 use core::fmt;
-use git2::Repository;
 use std::{
     error::Error,
     fmt::Display,
@@ -246,11 +245,6 @@ pub fn rebase(hash: &str, interactive: bool) -> Result<(), Box<dyn Error>> {
     rebase_command.status()?;
 
     Ok(())
-}
-
-#[allow(dead_code)]
-pub fn get_repository() -> Result<Repository, git2::Error> {
-    Repository::discover(".")
 }
 
 fn get_changes() -> Result<Vec<Change>, Box<dyn Error>> {

@@ -1,6 +1,6 @@
 use crate::{
     config::Commit,
-    git_operations::{commit, commit_fixup, get_current_branch, get_log, get_staged_changes},
+    git::{commit, commit_fixup, get_current_branch, get_log, get_staged_changes},
 };
 use crossterm::terminal;
 use inquire::{Confirm, Select, Text};

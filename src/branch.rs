@@ -1,10 +1,10 @@
 use inquire::{Confirm, MultiSelect};
 use std::error::Error;
 
-use crate::git_operations::{self, delete_branch, Branch};
+use crate::git::{self, delete_branch, Branch};
 
 pub fn run_branch(delete: bool, force_delete: bool) -> Result<(), Box<dyn Error>> {
-    let branches = git_operations::get_branches()?;
+    let branches = git::get_branches()?;
     if delete || force_delete {
         let branches: Vec<Branch> = branches.into_iter().filter(|branch| !branch.head).collect();
 

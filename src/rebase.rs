@@ -1,10 +1,10 @@
 use std::error::Error;
 
-use crate::git_operations::rebase;
+use crate::git::rebase;
 
 use inquire::Select;
 
-use crate::git_operations::get_log;
+use crate::git::get_log;
 
 pub fn run_rebase(interactive: bool) -> Result<(), Box<dyn Error>> {
     let commit_log = get_log()?;
