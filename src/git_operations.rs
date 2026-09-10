@@ -128,6 +128,7 @@ pub fn push_stash(selected_files: Vec<Change>, message: &str) -> Result<(), Box<
     Ok(())
 }
 
+#[derive(Clone)]
 pub struct Branch {
     pub name: String,
     #[allow(dead_code)]
@@ -247,6 +248,7 @@ pub fn rebase(hash: &str, interactive: bool) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 pub fn get_repository() -> Result<Repository, git2::Error> {
     Repository::discover(".")
 }
@@ -384,13 +386,13 @@ pub fn checkout_branch(branch: &str) -> Result<(), Box<dyn Error>> {
     }
 }
 
-pub fn get_current_branch() -> Result<String, git2::Error> {
-    let repo = get_repository()?;
-
-    let head = repo.head()?;
-    head.shorthand()
-        .map(|s| s.to_string())
-        .ok_or_else(|| git2::Error::from_str("Failed to get branch name"))
+pub fn get_current_branch() -> Result<Branch, Box<dyn Error>> {
+    let branches = get_branches()?;
+    branches
+        .iter()
+        .find(|branch| branch.head)
+        .cloned()
+        .ok_or_else(|| "No branch found".into())
 }
 
 pub fn create_and_checkout_branch(branch_name: &str) -> Result<(), Box<dyn Error>> {

@@ -44,9 +44,9 @@ pub fn run_commit(commit_config: Commit, fixup: bool, amend: bool) -> Result<(),
     };
 
     let ticket = if commit_config.ticket {
-        let re = Regex::new(r"[A-Z]+-[0-9]+").unwrap();
-        let branch = get_current_branch().unwrap();
-        re.find(&branch)
+        let re = Regex::new(r"[A-Z]+-[0-9]+")?;
+        let branch = get_current_branch()?;
+        re.find(&branch.name)
             .map(|regex_match| format!(" ({})", regex_match.as_str()))
             .unwrap_or_default()
     } else {
