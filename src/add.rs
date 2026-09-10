@@ -1,10 +1,10 @@
 use std::error::Error;
 
-use crate::git_operations::{self, Change};
+use crate::git::{self, Change};
 use inquire::MultiSelect;
 
 pub fn stage_files() -> Result<(), Box<dyn Error>> {
-    let changes = git_operations::get_unstaged_changes()?;
+    let changes = git::get_unstaged_changes()?;
 
     if changes.is_empty() {
         println!("No untracked or modified files found.");
@@ -22,7 +22,7 @@ pub fn stage_files() -> Result<(), Box<dyn Error>> {
 
     selected_files.extend(selected_unstaged);
 
-    git_operations::add_files(selected_files)?;
+    git::add_files(selected_files)?;
 
     println!("✅ Added files successfuly!");
     Ok(())

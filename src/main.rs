@@ -5,7 +5,7 @@ mod branch;
 mod checkout;
 mod commit;
 mod config;
-mod git_operations;
+mod git;
 mod rebase;
 mod revert;
 mod stash;

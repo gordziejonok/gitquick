@@ -4,7 +4,7 @@ use inquire::{Confirm, Select};
 
 use crate::{
     commit::print_in_box,
-    git_operations::{commit, get_log, revert},
+    git::{commit, get_log, revert},
 };
 
 pub fn run_revert() -> Result<(), Box<dyn Error>> {
