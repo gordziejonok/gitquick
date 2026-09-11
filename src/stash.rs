@@ -2,7 +2,7 @@ use std::error::Error;
 
 use inquire::{MultiSelect, Text};
 
-use crate::git::{self, Change};
+use crate::git::{self};
 
 pub fn run_stash(push: bool) -> Result<(), Box<dyn Error>> {
     if push {
@@ -13,20 +13,16 @@ pub fn run_stash(push: bool) -> Result<(), Box<dyn Error>> {
             return Ok(());
         }
 
-        let mut selected_files = Vec::<Change>::new();
+        let selected_changes = MultiSelect::new("Select changes to stash:", changes).prompt()?;
 
-        let selected_unstaged = MultiSelect::new("Select changes to stash:", changes).prompt()?;
-
-        if selected_unstaged.is_empty() && selected_files.is_empty() {
+        if selected_changes.is_empty() {
             println!("No files selected.");
             return Ok(());
         }
 
         let user_input = Text::new("Enter stash message:").prompt()?;
 
-        selected_files.extend(selected_unstaged);
-
-        git::push_stash(selected_files, &user_input)?;
+        git::push_stash(selected_changes, &user_input)?;
         println!("✅ Stash successful!");
     }
     Ok(())
