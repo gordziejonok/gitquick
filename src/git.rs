@@ -8,17 +8,22 @@ use std::{
 #[derive(Clone)]
 pub struct Change {
     pub path: String,
-    status: Status,
+    worktree: Status,
+    index: Status,
 }
 
 #[derive(Clone)]
 enum Status {
-    WtNew,
-    WtModified,
-    WtDeleted,
-    IndexNew,
-    IndexModified,
-    IndexDeleted,
+    Unmodified,
+    Modified,
+    FileTypeChanged,
+    Added,
+    Deleted,
+    Renamed,
+    Copied,
+    Updated,
+    Untracked,
+    Ignored,
 }
 
 #[derive(Debug)]
@@ -34,35 +39,36 @@ impl Display for StatusParseError {
     }
 }
 
-impl std::error::Error for StatusParseError {}
-
-impl TryFrom<&str> for Status {
+impl TryFrom<char> for Status {
     type Error = StatusParseError;
 
-    fn try_from(value: &str) -> Result<Status, Self::Error> {
+    fn try_from(value: char) -> Result<Status, Self::Error> {
         match value {
-            "??" => Ok(Status::WtNew),
-            " M" => Ok(Status::WtModified),
-            " D" => Ok(Status::WtDeleted),
-            "A " => Ok(Status::IndexNew),
-            "M " => Ok(Status::IndexModified),
-            "D " => Ok(Status::IndexDeleted),
-            _ => Err(StatusParseError::UnknownStatus(value.to_owned())),
+            ' ' => Ok(Status::Unmodified),
+            'M' => Ok(Status::Modified),
+            'T' => Ok(Status::FileTypeChanged),
+            'A' => Ok(Status::Added),
+            'D' => Ok(Status::Deleted),
+            'R' => Ok(Status::Renamed),
+            'C' => Ok(Status::Copied),
+            'U' => Ok(Status::Updated),
+            '?' => Ok(Status::Untracked),
+            '!' => Ok(Status::Ignored),
+            _ => Err(StatusParseError::UnknownStatus(value.to_string())),
         }
     }
 }
 
+impl std::error::Error for StatusParseError {}
+
 impl Change {
     pub fn is_worktree(&self) -> bool {
-        matches!(
-            self.status,
-            Status::WtNew | Status::WtModified | Status::WtDeleted
-        )
+        !matches!(self.worktree, Status::Unmodified)
     }
     pub fn is_staged(&self) -> bool {
-        matches!(
-            self.status,
-            Status::IndexNew | Status::IndexModified | Status::IndexDeleted
+        !matches!(
+            self.index,
+            Status::Unmodified | Status::Ignored | Status::Untracked
         )
     }
 }
@@ -80,10 +86,15 @@ impl fmt::Display for CommitLog {
 
 impl fmt::Display for Change {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let status_str = match self.status {
-            Status::WtNew => "new",
-            Status::WtModified => "modified",
-            Status::WtDeleted => "deleted",
+        let status_str = match self.worktree {
+            Status::Unmodified => "unmodified",
+            Status::Modified => "modified",
+            Status::FileTypeChanged => "file type changed",
+            Status::Added => "added",
+            Status::Deleted => "deleted",
+            Status::Renamed => "renamed",
+            Status::Copied => "copied",
+            Status::Updated => "updated but unmerged",
             _ => "?",
         };
         write!(f, "{}: {}", status_str, self.path)
@@ -258,17 +269,18 @@ fn get_changes() -> Result<Vec<Change>, Box<dyn Error>> {
         return Err(Box::new(std::io::Error::other(err.to_string())));
     }
 
-    let commits: Vec<Change> = String::from_utf8_lossy(&output.stdout)
+    let changes: Vec<Change> = String::from_utf8_lossy(&output.stdout)
         .lines()
-        .map(|line| -> Result<Change, StatusParseError> {
+        .map(|line| -> Result<Change, Box<dyn Error>> {
+            let mut status = line[..2].chars();
             Ok(Change {
                 path: line[3..].trim().to_owned(),
-                status: line[..2].try_into()?,
+                index: status.next().ok_or("Missing status code")?.try_into()?,
+                worktree: status.next().ok_or("Missing status code")?.try_into()?,
             })
         })
-        .collect::<Result<Vec<Change>, StatusParseError>>()?;
-
-    Ok(commits)
+        .collect::<Result<Vec<Change>, Box<dyn Error>>>()?;
+    Ok(changes)
 }
 
 pub fn get_unstaged_changes() -> Result<Vec<Change>, Box<dyn Error>> {
