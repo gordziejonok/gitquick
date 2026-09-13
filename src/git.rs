@@ -95,7 +95,8 @@ impl fmt::Display for Change {
             Status::Renamed => "renamed",
             Status::Copied => "copied",
             Status::Updated => "updated but unmerged",
-            _ => "?",
+            Status::Untracked => "untracked",
+            Status::Ignored => "ignored",
         };
         write!(f, "{}: {}", status_str, self.path)
     }
