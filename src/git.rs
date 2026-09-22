@@ -182,7 +182,7 @@ pub fn get_branches() -> Result<Vec<Branch>, Box<dyn Error>> {
     if !head_out.status.success() {
         return Err(String::from_utf8_lossy(&head_out.stderr).into());
     }
-
+    
     let binding = String::from_utf8(head_out.stdout)?;
     let head = binding.trim();
 
@@ -210,8 +210,12 @@ pub fn get_branches() -> Result<Vec<Branch>, Box<dyn Error>> {
         .arg("refs/remotes/")
         .output()?;
 
-    let output_str = String::from_utf8(output.stdout).map_err(|e| e.to_string())?;
-    let branches: Vec<Branch> = output_str
+    let branch_str = String::from_utf8(output.stdout).map_err(|e| e.to_string())?;
+    parse_branches(&branch_str)
+}
+
+fn parse_branches(branch_str: &str) -> Result<Vec<Branch>, Box<dyn Error>> {
+    let branches: Vec<Branch> = branch_str
         .lines()
         .map(|l| {
             let info: Vec<&str> = l.split("\0").collect();
