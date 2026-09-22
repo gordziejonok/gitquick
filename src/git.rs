@@ -222,7 +222,7 @@ pub fn get_branches() -> Result<Vec<Branch>, Box<dyn Error>> {
                 gone: info[2] == "gone",
                 ahead: ahead.parse().unwrap_or_default(),
                 behind: behind.parse().unwrap_or_default(),
-                head: info[4].is_empty(),
+                head: !info[4].trim().is_empty(),
             }
         })
         .collect();
