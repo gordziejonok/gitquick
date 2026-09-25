@@ -29,7 +29,7 @@ impl Display for ConventionalCommit {
             write!(f, "!")?;
         }
 
-        write!(f, ": {}", self.description)?;
+        writeln!(f, ": {}", self.description)?;
 
         if let Some(body) = &self.body {
             writeln!(f)?;
