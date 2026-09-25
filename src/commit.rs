@@ -226,7 +226,7 @@ mod tests {
 
         assert_eq!(
             message,
-            "feat(api)!: send an email to the customer when a product is shipped"
+            "feat(api)!: send an email to the customer when a product is shipped\n"
         );
     }
 }
