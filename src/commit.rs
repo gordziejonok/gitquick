@@ -29,7 +29,7 @@ impl Display for ConventionalCommit {
             write!(f, "!")?;
         }
 
-        write!(f, ": {}", self.description)?;
+        writeln!(f, ": {}", self.description)?;
 
         if let Some(body) = &self.body {
             writeln!(f)?;
@@ -226,7 +226,7 @@ mod tests {
 
         assert_eq!(
             message,
-            "feat(api)!: send an email to the customer when a product is shipped"
+            "feat(api)!: send an email to the customer when a product is shipped\n"
         );
     }
 }
