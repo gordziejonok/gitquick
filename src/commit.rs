@@ -137,9 +137,11 @@ fn create_conventional_commit(config: config::Commit) -> Result<String, Box<dyn 
     if is_breaking_change {
         commit.breaking_change = true;
         let breaking_change_desc = Text::new("Breaking change description:").prompt()?;
-        commit
-            .footers
-            .push(format!("BREAKING CHANGE: {}", breaking_change_desc));
+        if !breaking_change_desc.trim().is_empty() {
+            commit
+                .footers
+                .push(format!("BREAKING CHANGE: {}", breaking_change_desc));
+        }
     }
 
     Ok(commit.to_string())
