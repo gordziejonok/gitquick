@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.3.2](https://github.com/gordziejonok/gitquick/compare/v0.3.1...v0.3.2) (2026-09-26)
+
+
+### Features
+
+* add ahead and behind information for branches ([#99](https://github.com/gordziejonok/gitquick/issues/99)) ([b69e37f](https://github.com/gordziejonok/gitquick/commit/b69e37f1c4f598792e02cec926201ce4bf95a214))
+* add gone information for branches ([#102](https://github.com/gordziejonok/gitquick/issues/102)) ([47b0417](https://github.com/gordziejonok/gitquick/commit/47b0417afe09a0afb3717f16c36d148557b73e4a))
+* **commit:** allow empty breaking change description ([#118](https://github.com/gordziejonok/gitquick/issues/118)) ([4a8292e](https://github.com/gordziejonok/gitquick/commit/4a8292e04019b1a66a470ead860cab000ca65fde))
+
+
+### Bug Fixes
+
+* **commit:** correct message spacing ([#117](https://github.com/gordziejonok/gitquick/issues/117)) ([bd58e2e](https://github.com/gordziejonok/gitquick/commit/bd58e2e23ed23c3c9ce8332b86c1981d76cab90d))
+* **git:** add missing untracked and ignored status display ([#115](https://github.com/gordziejonok/gitquick/issues/115)) ([4bab688](https://github.com/gordziejonok/gitquick/commit/4bab68872dab2c476d9eb12f93e41baa4409ff78))
+* **git:** parse all git status codes ([#114](https://github.com/gordziejonok/gitquick/issues/114)) ([b230dbf](https://github.com/gordziejonok/gitquick/commit/b230dbfe354cd190e098d1c92aacc4f5bd34dddd))
+* parse head correctly ([#116](https://github.com/gordziejonok/gitquick/issues/116)) ([fe6729e](https://github.com/gordziejonok/gitquick/commit/fe6729e3fdb6a9d39e8cfcfc4371f9c9a28df6f7))
+
 ## [0.3.1](https://github.com/gordziejonok/gitquick/compare/v0.3.0...v0.3.1) (2026-08-20)
 
 
