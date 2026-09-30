@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.3](https://github.com/gordziejonok/gitquick/compare/v0.3.2...v0.3.3) (2026-09-30)
+
+
+### Bug Fixes
+
+* **commit:** skip git trailer if no ticket matches ([#119](https://github.com/gordziejonok/gitquick/issues/119)) ([b5b4789](https://github.com/gordziejonok/gitquick/commit/b5b478938bcf3148e958b5ad9eb8efe26c50014b))
+
 ## [0.3.2](https://github.com/gordziejonok/gitquick/compare/v0.3.1...v0.3.2) (2026-09-26)
 
 
