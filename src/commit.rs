@@ -87,7 +87,12 @@ pub fn run_commit(
         // TODO refactor this
         let commit = Text::new("Enter commit message:").prompt()?;
         let trailer = if commit_config.ticket {
-            format!("\n\n{}", get_ticket()?)
+            let ticket = get_ticket()?;
+            if let Some(footer) = ticket {
+                format!("\n\n{}", footer)
+            } else {
+                "".to_owned()
+            }
         } else {
             "".to_owned()
         };
@@ -128,7 +133,9 @@ fn create_conventional_commit(config: config::Commit) -> Result<String, Box<dyn 
 
     if config.ticket {
         let ticket = get_ticket()?;
-        commit.footers.push(ticket);
+        if let Some(footer) = ticket {
+            commit.footers.push(footer);
+        }
     }
 
     let is_breaking_change = Confirm::new("BREAKING CHANGE?")
@@ -147,13 +154,12 @@ fn create_conventional_commit(config: config::Commit) -> Result<String, Box<dyn 
     Ok(commit.to_string())
 }
 
-fn get_ticket() -> Result<String, Box<dyn Error + 'static>> {
+fn get_ticket() -> Result<Option<String>, Box<dyn Error + 'static>> {
     let re = Regex::new(r"[A-Z]+-[0-9]+")?;
     let branch = get_current_branch()?;
     let ticket = re
         .find(&branch.name)
-        .map(|regex_match| format!("Refs: {}", regex_match.as_str()))
-        .unwrap_or_default();
+        .map(|regex_match| format!("Refs: {}", regex_match.as_str()));
     Ok(ticket)
 }
 
