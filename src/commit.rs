@@ -52,6 +52,11 @@ pub fn run_commit(
     fixup: bool,
     amend: bool,
 ) -> Result<(), Box<dyn Error>> {
+    if amend {
+        run_amend(commit_config)?;
+        return Ok(());
+    }
+
     let staged = get_staged_changes()?;
 
     if staged.is_empty() {
@@ -64,23 +69,23 @@ pub fn run_commit(
         return Ok(());
     }
 
-    if amend {
-        let log = get_log()?;
-        if let Some(log) = log.first() {
-            print_in_box(&log.message)?;
+    let message = generate_message(commit_config)?;
 
-            let should_commit = Confirm::new("Commit with previous message?")
-                .with_default(true)
-                .prompt()?;
+    print_in_box(&message)?;
 
-            if should_commit {
-                commit(&log.message, amend)?;
-                println!("✅ Commit successful!");
-                return Ok(());
-            }
-        }
+    let should_commit = Confirm::new("Commit?").with_default(true).prompt()?;
+
+    if should_commit {
+        commit(&message, amend)?;
+        println!("✅ Commit successful!");
+    } else {
+        println!("❌ Commit canceled or failed to get user confirmation.");
     }
 
+    Ok(())
+}
+
+fn generate_message(commit_config: config::Commit) -> Result<String, Box<dyn Error + 'static>> {
     let message = if commit_config.conventional {
         create_conventional_commit(commit_config)?
     } else {
@@ -98,18 +103,40 @@ pub fn run_commit(
         };
         format!("{}{}", commit, trailer)
     };
+    Ok(message)
+}
+
+fn run_amend(commit_config: config::Commit) -> Result<(), Box<dyn Error>> {
+    let staged = get_staged_changes()?;
+    let log = get_log()?;
+    if !staged.is_empty()
+        && let Some(log) = log.first()
+    {
+        print_in_box(&log.message)?;
+
+        let should_commit = Confirm::new("Commit with previous message?")
+            .with_default(true)
+            .prompt()?;
+
+        if should_commit {
+            commit(&log.message, true)?;
+            println!("✅ Commit successful!");
+            return Ok(());
+        }
+    }
+
+    let message = generate_message(commit_config)?;
 
     print_in_box(&message)?;
 
     let should_commit = Confirm::new("Commit?").with_default(true).prompt()?;
 
     if should_commit {
-        commit(&message, amend)?;
+        commit(&message, true)?;
         println!("✅ Commit successful!");
     } else {
         println!("❌ Commit canceled or failed to get user confirmation.");
     }
-
     Ok(())
 }
 
