@@ -1,7 +1,7 @@
 use inquire::{Confirm, MultiSelect};
 use std::error::Error;
 
-use crate::git::{self, delete_branch, Branch};
+use crate::git::{self, Branch, delete_branch};
 
 pub fn run_branch(delete: bool, force_delete: bool) -> Result<(), Box<dyn Error>> {
     let branches = git::get_branches()?;
