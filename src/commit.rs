@@ -69,19 +69,24 @@ pub fn run_commit(
         return Ok(());
     }
 
+    generate_commit(commit_config, false)?;
+
+    Ok(())
+}
+
+fn generate_commit(
+    commit_config: config::Commit,
+    amend: bool,
+) -> Result<(), Box<dyn Error + 'static>> {
     let message = generate_message(commit_config)?;
-
     print_in_box(&message)?;
-
     let should_commit = Confirm::new("Commit?").with_default(true).prompt()?;
-
     if should_commit {
         commit(&message, amend)?;
         println!("✅ Commit successful!");
     } else {
         println!("❌ Commit canceled or failed to get user confirmation.");
     }
-
     Ok(())
 }
 
@@ -125,18 +130,8 @@ fn run_amend(commit_config: config::Commit) -> Result<(), Box<dyn Error>> {
         }
     }
 
-    let message = generate_message(commit_config)?;
+    generate_commit(commit_config, true)?;
 
-    print_in_box(&message)?;
-
-    let should_commit = Confirm::new("Commit?").with_default(true).prompt()?;
-
-    if should_commit {
-        commit(&message, true)?;
-        println!("✅ Commit successful!");
-    } else {
-        println!("❌ Commit canceled or failed to get user confirmation.");
-    }
     Ok(())
 }
 
