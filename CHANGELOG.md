@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.3.3](https://github.com/gordziejonok/gitquick/compare/v0.3.2...v0.3.3) (2026-10-07)
+
+
+### Features
+
+* **commit:** allow amend with no changes ([#122](https://github.com/gordziejonok/gitquick/issues/122)) ([0b7b108](https://github.com/gordziejonok/gitquick/commit/0b7b1084c573ae5b85b6b954b468d7ecb8cc5be7))
+
+
+### Bug Fixes
+
+* **commit:** skip git trailer if no ticket matches ([#119](https://github.com/gordziejonok/gitquick/issues/119)) ([b5b4789](https://github.com/gordziejonok/gitquick/commit/b5b478938bcf3148e958b5ad9eb8efe26c50014b))
+
 ## [0.3.2](https://github.com/gordziejonok/gitquick/compare/v0.3.1...v0.3.2) (2026-09-26)
 
 
